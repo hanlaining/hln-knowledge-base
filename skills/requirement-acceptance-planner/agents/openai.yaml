@@ -1,0 +1,4 @@
+interface:
+  display_name: "需求与验收双锚点规划"
+  short_description: "从用户需求和验收用例倒推 MVP、任务与多 CLI 执行计划"
+  default_prompt: "使用 $requirement-acceptance-planner 把我的产品想法整理成需求 Rxx、验收用例 ACxx 和可执行的任务计划。"
