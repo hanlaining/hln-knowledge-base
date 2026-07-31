@@ -1049,4 +1049,4 @@ Runtime 必须把决策变成可观察、可审批、可恢复的执行
 - [官方 Grok-1 仓库](https://github.com/xai-org/grok-1)
 - [社区 superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli)
 - 同目录：[Grok-1 开源项目源码架构深度解析](./Grok-1开源项目源码架构深度解析.md)
-- 同目录：[Codex Skill 选择、加载与多 Skill 执行机制](./Codex-Skill选择加载与多Skill执行机制.md)
+- Codex 专题：[Codex Skill 选择、加载与多 Skill 执行机制](../02-Codex源码学习/Codex-Skill选择加载与多Skill执行机制.md)
