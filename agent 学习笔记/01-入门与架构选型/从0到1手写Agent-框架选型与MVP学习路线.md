@@ -1,11 +1,54 @@
 # 从 0 到 1 手写桌面 Agent：框架选型与 MVP 学习路线
 
-> 文档状态：第二版方案，已按“两版本、分阶段迁移到 Rust”纠偏<br>
-> 更新时间：2026-07-31<br>
-> 当前阶段：只做产品形态、框架选型、验收用例和任务拆分，不进入代码实现<br>
+> 文档状态：第三版执行稿，已从架构选型进入真实手写阶段<br>
+> 更新时间：2026-08-01<br>
+> 当前阶段：`T00` 项目骨架已完成，正在进行 `T01-1` JSON-RPC 消息类型<br>
 > 核心目标：不是复制完整 Codex，而是亲手做出一个最小、真实、可运行、架构边界正确的桌面 Agent。
 
-## 0. 本次用户纠偏
+## 0. 第三版更新：已经正式开始手写
+
+### 0.1 当前真实状态
+
+此前文档仍停留在“只做方案，不创建项目”，现在这句话已经失效。实际状态如下：
+
+| 项目 | 当前状态 |
+|---|---|
+| 学习仓库 | [hanlaining/agent-learn](https://github.com/hanlaining/agent-learn) |
+| 仓库权限 | Private |
+| 本机目录 | `agent-electron` |
+| 当前技术栈 | TypeScript + Node.js，先使用 CLI 观察协议链路 |
+| `T00` | 已完成：项目初始化、类型检查和最小 CLI 启动 |
+| `T01-1` | 进行中：在 `src/protocol/json-rpc.ts` 手写消息类型 |
+| 暂不开始 | Electron 页面、真实模型、Tool、Skills、MCP、Rust/Tauri |
+
+当前真实目录：
+
+```text
+agent-electron/
+├─ src/
+│  ├─ app-server/       # 后续实现 App Server
+│  ├─ cli/main.ts       # 当前最小入口，输出 Agent Lab ready
+│  ├─ model/            # 后续实现 Model Adapter
+│  ├─ protocol/
+│  │  └─ json-rpc.ts    # 当前手写入口
+│  ├─ runtime/          # 后续实现 Agent Loop 与状态机
+│  └─ tools/            # 后续实现 Tool Registry / Executor
+├─ tests/               # 后续从协议测试开始补充
+├─ package.json
+└─ tsconfig.json
+```
+
+换电脑继续：
+
+```bash
+git clone https://github.com/hanlaining/agent-learn.git
+cd agent-learn
+npm install
+npm run check
+code .
+```
+
+### 0.2 已确认的两版本路线
 
 > “如果 Electron 的话，我后期要换架构岂不是都要重弄么？或者可以分两个版本，先来个简易学习版先理解整个链路搭建，然后开始在 Rust 搭建。”
 
@@ -14,7 +57,7 @@
 - Added：正式增加第二个 Rust/Tauri 版本，不再只把 Tauri 当作可选性能实验。
 - Changed：原 R10 从“Electron 后做 Tauri 替壳”改为“两版本、三步迁移”。
 - Added：迁移时先保持 Electron、单独替换 Rust Runtime，再替换 Tauri 客户端，避免同时改变两层。
-- Unchanged：第一版仍然从最小 Agent Loop、Tool、审批和协议开始。
+- Changed：当前按 Codex-like 学习目标调整为“Protocol → App Server → Runtime → Model/Tool → Electron”。
 - Unchanged：第一版仍然不做 Skills、多 Agent、RAG 和生产级 Sandbox。
 
 ### 结论
@@ -51,7 +94,7 @@ Tauri + Rust Runtime
 
 - Model、Agent Runtime、Agent Loop 分别负责什么。
 - 客户端与本地 Runtime 为什么要分离。
-- JSON-RPC-like 和事件流怎样连接 UI 与 Runtime。
+- Codex 风格 JSON-RPC 2.0 和事件流怎样连接 UI 与 Runtime。
 - Tool Call 是怎样生成、路由、审批和执行的。
 - Sandbox、权限和 Tool 之间是什么关系。
 - Agent 如何流式输出、停止、失败和恢复。
@@ -121,7 +164,7 @@ Rust App Server / Runtime Sidecar
 
 这一阶段验证：
 
-- JSON-RPC-like 协议是否真正与语言无关。
+- Codex 风格 JSON-RPC 协议是否真正与语言无关。
 - Rust Runtime 是否通过版本 A 的相同验收用例。
 - Electron UI 是否完全不需要理解 Runtime 内部实现。
 - Tool、审批、取消和错误语义是否保持一致。
@@ -130,7 +173,7 @@ Rust App Server / Runtime Sidecar
 
 ```text
 Tauri UI
-   ↓ 同一套 JSON-RPC-like 协议
+   ↓ 同一套 Codex 风格 JSON-RPC 协议
 Rust Agent Runtime Sidecar
 ```
 
@@ -283,13 +326,13 @@ Agent 收到拒绝结果并给出替代说明
 | R02 | confirmed | 第一版从简易版本开始，不直接做完整 Codex。 | 用户明确提出 |
 | R03 | confirmed | 先完成客户端框架选型，重点比较 Tauri 与 Electron。 | 用户明确提出 |
 | R04 | confirmed | 形成 Markdown 文档供用户验收。 | 用户明确提出 |
-| R05 | inferred | 最终形态是独立桌面客户端，而不是只做终端脚本。 | 来自连续讨论上下文，待确认 |
+| R05 | confirmed | 最终形态是独立桌面客户端；CLI 只用于早期观察和测试。 | 用户已选择先手写 Codex-like 客户端架构 |
 | R06 | inferred | 第一版应该真实调用一个模型，而不是使用假数据。 | 学习 Agent Loop 所需，待确认 |
 | R07 | inferred | 第一版需要至少一个真实 Tool Call，才能称为 Agent，而不是普通 Chatbox。 | 学习目标推导 |
 | R08 | inferred | Tool 执行必须体现最小权限和审批边界。 | 学习 Execution Infrastructure 所需 |
-| R09 | inferred | UI 与 Runtime 使用独立进程和清晰协议。 | 为学习 Codex 式分层而提出 |
+| R09 | confirmed | UI 与 Runtime 使用独立进程和清晰协议。 | 用户明确要求学习 Codex App Server 架构 |
 | R10 | confirmed | 分为两个版本：先用 Electron/TypeScript 做简易学习版，再进入 Rust/Tauri 深入版。 | 用户本次明确提出 |
-| R11 | inferred | 第一阶段由你亲手单线实现，不使用多 Agent 并行替你完成主体代码。 | “手戳学习”的合理解释，待确认 |
+| R11 | confirmed | 第一阶段由用户亲手单线实现，不使用多 Agent 代写主体代码。 | 用户明确要求从 0 到 1 手戳 |
 | R12 | inferred | 第二版采用三步迁移：先保持 Electron 将 Runtime 换成 Rust，再将客户端壳换成 Tauri。 | 为避免同时重写两层而推导，待确认 |
 | R13 | inferred | 两版共享语言无关协议、验收用例、测试 Fixture、Tool Schema 和 UI 业务组件。 | 保证学习成果可迁移所需 |
 
@@ -301,7 +344,7 @@ Agent 收到拒绝结果并给出替代说明
 | U02 | 你的 TypeScript、React、Rust 熟练程度分别如何？ | 不阻塞；版本 A 按 TypeScript 入门，版本 B 系统学习 Rust |
 | U03 | 第一版使用 OpenAI、Gundam/企业 Gateway，还是其他兼容模型？ | 不阻塞；通过 Model Adapter 隔离 |
 | U04 | 第一版是否要求修改文件？ | 不阻塞；默认只读文件，写文件延后 |
-| U05 | 学习项目最终是否需要公开到 GitHub？ | 不阻塞；当前不执行 Git 操作 |
+| U05 | 仓库是否公开？ | 已解决：当前使用 GitHub Private 仓库 |
 
 ---
 
@@ -312,7 +355,7 @@ Agent 收到拒绝结果并给出替代说明
 1. 启动一个真实 Electron 桌面窗口。
 2. Electron 启动一个独立 Runtime Sidecar。
 3. UI 与 Runtime 通过 `stdio + JSONL` 通信。
-4. 消息采用最小 JSON-RPC-like 结构。
+4. 消息采用 Codex 风格的 JSON-RPC 2.0 语义；线上结构与 Codex 一样省略 `jsonrpc` 字段。
 5. Runtime 能调用一个真实模型。
 6. 实现一个最小 Agent Loop。
 7. 实现 `list_files` 和 `read_file` 两个只读 Tool。
@@ -424,7 +467,7 @@ Runtime 必须是独立模块或独立进程
                    │ stdio + JSONL
 ┌──────────────────▼──────────────────────┐
 │ Agent App Server                        │
-│ JSON-RPC-like / Events / Request Map    │
+│ JSON-RPC 2.0 Semantics / Request Map    │
 ├─────────────────────────────────────────┤
 │ Agent Runtime                           │
 │ Loop / State / Context / Cancel         │
@@ -461,7 +504,54 @@ UI 只知道：startTurn、cancelTurn、approvalResponse、events
 Runtime 只知道：任务、模型、Tool、状态
 ```
 
-### 9.2 最小 JSON-RPC-like 消息
+### 9.2 Codex App Server 的 JSON-RPC 到底是什么
+
+根据当前官方文档，Codex App Server：
+
+- 使用双向 JSON-RPC 2.0 消息语义。
+- 在线路消息中省略标准 JSON-RPC 的 `"jsonrpc":"2.0"` 字段。
+- 默认使用 `stdio`，每一行是一条完整 JSON，也就是 JSONL。
+- WebSocket 是实验性传输，一帧承载一条 JSON-RPC 消息。
+- Unix Socket 不是“直接传裸 JSON”，而是在 Unix Socket 上建立 WebSocket 连接，并执行标准 HTTP Upgrade 握手。
+
+因此更准确的称呼是：
+
+```text
+语义层：JSON-RPC 2.0
+Codex 线上 Envelope：省略 jsonrpc 字段
+默认帧边界：stdio + 每行一条 JSON（JSONL）
+```
+
+本项目第一阶段主动采用相同 Envelope，便于理解 Codex，但暂时只实现最小方法集合，不追求整个 App Server API 兼容。
+
+当前 Codex 的命令审批也是一个服务端发给客户端的 Request，正式方法名是 `item/commandExecution/requestApproval`。客户端使用相同 `id` 返回决策后，服务端还会发出 `serverRequest/resolved`，表示这次待处理请求已经被回答或清除：
+
+```text
+App Server                              Client
+    │── item/commandExecution/requestApproval ──>│
+    │<──────── result + same id ─────────────────│
+    │── serverRequest/resolved ─────────────────>│
+```
+
+这说明 JSON-RPC 的 Client/Server 是连接角色，不等于消息只能由 Client 发起。双方都可以发 Request，`id` 的作用是把 Response 关联回发起它的那一方。
+
+连接建立后的正式顺序也不是直接 `turn/start`：
+
+```text
+Client                  App Server
+  │── initialize ──────────>│
+  │<──── result ────────────│
+  │── initialized ─────────>│
+  │── thread/start ────────>│
+  │<──── thread result ─────│
+  │── turn/start ──────────>│
+  │<──── streamed events ───│
+  │<──── turn/completed ────│
+```
+
+第一步只学消息形状，握手和 Thread/Turn/Item 在后续切片实现。
+
+### 9.3 本项目的最小消息示例
 
 客户端开始任务：
 
@@ -493,11 +583,28 @@ Runtime 发起审批：
 {"method":"turn/completed","params":{"turnId":"turn-1","status":"completed"}}
 ```
 
-这些方法名是本学习项目自定义的最小协议，不宣称与 Codex App Server 完全兼容。
+这些方法名是本学习项目自定义的最小集合。消息方向和 `id` 关联语义模仿 Codex，但不宣称与完整 Codex App Server API 兼容。
 
 ---
 
-## 10. 建议的目录结构
+## 10. 目录结构：先小后大
+
+当前不要立刻改造成 Monorepo。先在已经创建的 `src/` 分层结构里跑通协议、App Server 和 Runtime；当 Electron 接入并出现第二个进程入口时，再迁移到下面的目标结构。
+
+### 10.1 当前结构
+
+```text
+src/
+├─ cli/
+├─ protocol/
+├─ app-server/
+├─ runtime/
+├─ model/
+└─ tools/
+tests/
+```
+
+### 10.2 Electron 阶段的目标结构
 
 第一版不追求复杂 Monorepo，保持边界可见即可：
 
@@ -776,73 +883,80 @@ Key 规则：
 
 ## 15. 从验收用例倒推任务 Txx
 
-| Task | 可独立验收的结果 | Requirements | Acceptance |
-|---|---|---|---|
-| T00 | 确认框架、目标平台和模型 Provider | R03, R06, R10 | AC01, AC02 |
-| T01 | 终端中跑通一次真实模型流式响应 | R01, R02, R06 | AC02 |
-| T02 | 在无桌面 UI 条件下跑通最小 Agent Loop 和只读 Tool | R01, R02, R07 | AC03, AC06 |
-| T03 | 定义最小 JSON-RPC-like 协议并通过 stdio 驱动 Runtime | R09 | AC03, AC07 |
-| T04 | Electron 真实窗口启动并管理 Runtime Sidecar | R03, R05, R10 | AC01, AC08 |
-| T05 | Chat UI 展示流式输出、状态和停止操作 | R01, R05, R09 | AC02, AC07 |
-| T06 | Tool Router、路径校验和只读 Tool 完整接入 | R07, R08 | AC03, AC06 |
-| T07 | `run_command` 审批、执行、超时和取消 | R07, R08 | AC04, AC05, AC07 |
-| T08 | Key、日志、进程清理和端到端验收 | R06, R08, R09 | AC01-AC09 |
-| T09 | 保持 Electron 不变，用 Rust 重写 Runtime 并通过协议等价验收 | R03, R09, R10, R12, R13 | AC10 |
-| T10 | Tauri 复用 Rust Runtime，替换 Electron 客户端壳 | R03, R09, R10, R12, R13 | AC11 |
+| Task | 状态 | 可独立验收的结果 | Requirements | Acceptance |
+|---|---|---|---|---|
+| T00 | complete | TypeScript 骨架可检查、可启动并已进入私有 GitHub 仓库 | R01, R04, R11 | `npm run check`、`npm run dev` |
+| T01 | in-progress | 手写请求、通知、成功响应、错误响应的类型与分类函数 | R01, R09, R11 | 协议单测 |
+| T02 | pending | JSONL 编解码、`id` 关联和 `initialize` 握手可在 CLI 双向运行 | R09 | 协议往返测试 |
+| T03 | pending | 实现最小 App Server 与 Thread / Turn / Item 生命周期 | R01, R09 | 生命周期 Trace |
+| T04 | pending | Fake Model 驱动最小 Agent Loop，先验证状态机而不消耗 Key | R01, R02 | 确定性 Runtime 测试 |
+| T05 | pending | 接入一个真实 Model Adapter，支持文本流与取消 | R06 | AC02, AC07, AC09 |
+| T06 | pending | Tool Registry、`list_files`、`read_file` 和目录边界 | R07, R08 | AC03, AC06 |
+| T07 | pending | 服务端反向审批、`run_command`、超时与取消 | R07, R08, R09 | AC04, AC05, AC07 |
+| T08 | pending | Electron 启动独立 Sidecar，并完成受控 Preload 桥接 | R03, R05, R10 | AC01, AC08 |
+| T09 | pending | Chat UI、流式事件、停止、日志脱敏和版本 A 端到端验收 | R01-R11 | AC01-AC09 |
+| T10 | pending | 保持 Electron 不变，用 Rust 重写 Runtime | R03, R09, R10, R12, R13 | AC10 |
+| T11 | pending | Tauri 复用 Rust Runtime，替换 Electron 客户端壳 | R03, R09, R10, R12, R13 | AC11 |
 
 ---
 
-## 16. 为什么先做终端 Runtime PoC
+## 16. 为什么现在先手写 Protocol，而不是先画 Electron 页面
 
-虽然最终产品是桌面客户端，但第一个代码切片不应该是画 Chat 页面。
+虽然最终产品是桌面客户端，但当前目标是理解 Codex-like App Server，所以先建立客户端和 Runtime 共同遵守的协议边界。
 
 推荐顺序：
 
 ```text
-先在终端跑通 Model
+先定义 JSON-RPC 消息类型
         ↓
-再跑通 Agent Loop + Tool
+用 CLI 跑通 JSONL 双向通信和 initialize
         ↓
-再封装 JSON-RPC-like App Server
+建立 Thread / Turn / Item 和最小 App Server
+        ↓
+用 Fake Model 跑通 Agent Loop
+        ↓
+接真实 Model 与 Tool
         ↓
 最后接 Electron UI
 ```
 
 原因：
 
-- 如果模型或 Tool Loop 没跑通，先做 UI 只会隐藏问题。
-- Runtime 可以通过自动化测试验证，不依赖点页面。
-- UI 接入时只需要消费一个已经工作的协议。
-- 更容易区分模型问题、Runtime 问题和客户端问题。
+- 先固定消息方向、`id` 关联、错误和握手语义，后续 UI 与 Runtime 不会互相渗透。
+- Fake Model 让状态机测试可重复，不会把协议错误和模型随机性混在一起。
+- 真实模型仍然在 Electron 之前接入，避免最后才发现 Tool Call 或取消语义不成立。
+- UI 接入时只消费一个已经通过黑盒测试的 App Server。
 
-这不代表最终产品是 CLI。终端只用于早期消除最大不确定性。
+这不代表 Agent 的本质是 JSON-RPC，也不代表最终产品是 CLI。JSON-RPC 是边界协议，Runtime 的 Agent Loop 才负责真正决定下一步动作。
 
 ---
 
 ## 17. 任务依赖
 
 ```text
-T00 选型确认
+T00 项目骨架（已完成）
    ↓
-T01 真实模型 PoC
+T01 JSON-RPC 消息类型（当前）
    ↓
-T02 Agent Loop + 只读 Tool
+T02 JSONL + Request Map + Initialize
    ↓
-T03 JSON-RPC-like App Server
+T03 Thread / Turn / Item + App Server
    ↓
-T04 Electron + Sidecar 生命周期
+T04 Fake Model + Agent Loop
    ↓
-T05 Chat/Stream/Stop
+T05 真实 Model Adapter
    ↓
-T06 Tool Router 与目录边界
+T06 只读 Tool 与目录边界
    ↓
-T07 Approval + Command
+T07 双向 Approval + Command
    ↓
-T08 端到端、安全与进程验收
+T08 Electron + Sidecar 生命周期
    ↓
-T09 Electron + Rust Runtime 等价替换
+T09 版本 A 端到端验收
    ↓
-T10 Tauri + Rust Runtime 替壳验收
+T10 Electron + Rust Runtime 等价替换
+   ↓
+T11 Tauri + Rust Runtime 替壳验收
 ```
 
 这条路线故意串行。当前目标是学习，不建议用多个 CLI 同时生成核心代码，否则你会得到项目，却未必真正理解 Runtime。
@@ -853,15 +967,17 @@ T10 Tauri + Rust Runtime 替壳验收
 
 | Slice | 目标 | 计划文件边界 | 验证方式 | 回滚点 |
 |---|---|---|---|---|
-| S1 | 真实模型输出 | `packages/model`、最小 CLI 入口 | 看到真实流式文本和 usage/error | 删除 Provider 实现，不影响 UI |
-| S2 | Agent Loop | `packages/runtime` | 固定任务触发一次 Tool 后完成 | 回到单轮模型调用 |
-| S3 | Tool 安全边界 | `packages/tools`、fixtures | 允许 Workspace 内读取，拒绝 `../` | 移除新 Tool 注册 |
-| S4 | App Server | `packages/protocol`、Runtime 入口 | 用测试客户端发送一行 JSON 并收到事件 | 保留 Runtime，移除协议适配 |
-| S5 | Electron 壳 | `apps/desktop-electron` | 窗口启动、Runtime Ready、退出无残留 | 删除桌面 App，不影响 Runtime |
-| S6 | 审批和取消 | Runtime、Protocol、Approval UI | Deny 不执行，AllowOnce 只生效一次，Stop 真取消 | 禁用 `run_command` |
-| S7 | 端到端验收 | tests、fixtures、文档 | 逐条执行 AC01-AC09 | 回到最后一个通过验收的 Slice |
-| S8 | Rust Runtime 等价替换 | `rust/runtime`、protocol fixtures | Electron 切换 Rust Sidecar 后通过 AC10 | 切回 TypeScript Sidecar |
-| S9 | Tauri 替壳 | `apps/desktop-tauri` | 同一 Rust Runtime 通过 AC11 | 删除 Tauri App，不影响 Electron/Rust 组合 |
+| S1 | JSON-RPC 类型 | `src/protocol/json-rpc.ts`、协议测试 | 四种消息可区分，`id` 类型正确 | 回到空协议文件 |
+| S2 | JSONL 与关联表 | `src/protocol`、`src/cli` | 两条消息不会粘连，响应命中原请求 | 保留纯类型，移除 I/O |
+| S3 | App Server 生命周期 | `src/app-server`、`src/runtime` | initialize 后才能创建 Thread 和 Turn | 回到协议往返测试 |
+| S4 | Agent Loop | `src/runtime`、Fake Model | 固定任务触发一次 Tool 请求后完成 | 回到单 Turn 生命周期 |
+| S5 | 真实模型输出 | `src/model`、CLI | 看到真实流式文本、usage、error 和取消 | 切回 Fake Model |
+| S6 | Tool 安全边界 | `src/tools`、fixtures | 允许 Workspace 内读取，拒绝 `../` | 移除 Tool 注册 |
+| S7 | 审批和取消 | Runtime、Protocol、CLI 审批客户端 | Deny 不执行，AllowOnce 仅一次，Stop 真取消 | 禁用 `run_command` |
+| S8 | Electron 壳 | Electron app 目录 | 窗口启动、Runtime Ready、退出无残留 | 保留 CLI 客户端 |
+| S9 | 端到端验收 | tests、fixtures、文档 | 逐条执行 AC01-AC09 | 回到最后通过的 Slice |
+| S10 | Rust Runtime 等价替换 | `rust/runtime`、protocol fixtures | Electron 切换 Rust Sidecar 后通过 AC10 | 切回 TypeScript Sidecar |
+| S11 | Tauri 替壳 | Tauri app 目录 | 同一 Rust Runtime 通过 AC11 | 保留 Electron/Rust 组合 |
 
 原则：每个 Slice 验收通过以后才进入下一步。
 
@@ -871,19 +987,19 @@ T10 Tauri + Rust Runtime 替壳验收
 
 | Requirement | 需求摘要 | Acceptance cases | Tasks | 最终证据 | 状态 |
 |---|---|---|---|---|---|
-| R01 | 亲手实现 Agent | AC01-AC07 | T01-T08 | 真实桌面端到端录屏与 Trace | pending |
-| R02 | 从简易版本开始 | AC02, AC03 | T01, T02 | 最小 Loop 测试 | pending |
-| R03 | 比较 Tauri/Electron | AC01, AC10, AC11 | T00, T04, T09, T10 | 两壳及两 Runtime 组合验收 | pending |
+| R01 | 亲手实现 Agent | AC01-AC07 | T01-T09 | 真实桌面端到端录屏与 Trace | in-progress |
+| R02 | 从简易版本开始 | AC02, AC03 | T01-T04 | 最小 Loop 测试 | in-progress |
+| R03 | 比较 Tauri/Electron | AC01, AC10, AC11 | T00, T08, T10, T11 | 两壳及两 Runtime 组合验收 | confirmed |
 | R04 | Markdown 供验收 | 本文档本身 | 当前文档任务 | 文件路径与内容检查 | complete-local |
-| R05 | 独立桌面客户端 | AC01, AC08 | T04, T05 | 真实窗口与进程记录 | draft |
-| R06 | 真实模型 | AC02, AC09 | T01, T08 | 脱敏真实响应 | draft |
-| R07 | 真实 Tool Call | AC03-AC05 | T02, T06, T07 | Tool Trace | draft |
-| R08 | 权限与审批 | AC04-AC06, AC09 | T06-T08 | 拒绝、审批和扫描证据 | draft |
-| R09 | UI/Runtime 分离 | AC03, AC07, AC08, AC10, AC11 | T03-T10 | 协议测试和进程边界 | draft |
-| R10 | 两版本：Electron 学习版、Rust/Tauri 深入版 | AC01, AC10, AC11 | T00, T04, T09, T10 | 两版本验收报告 | confirmed |
-| R11 | 亲手单线学习 | AC01-AC09 | T01-T08 | 每个 Slice 的学习记录 | draft |
-| R12 | 先替换 Rust Runtime，再替换 Tauri 壳 | AC10, AC11 | T09, T10 | 分阶段迁移记录 | draft |
-| R13 | 共享协议、Fixture、验收和 UI 业务组件 | AC10, AC11 | T09, T10 | 契约测试与复用清单 | draft |
+| R05 | 独立桌面客户端 | AC01, AC08 | T08, T09 | 真实窗口与进程记录 | confirmed |
+| R06 | 真实模型 | AC02, AC09 | T05, T09 | 脱敏真实响应 | pending |
+| R07 | 真实 Tool Call | AC03-AC05 | T04, T06, T07 | Tool Trace | pending |
+| R08 | 权限与审批 | AC04-AC06, AC09 | T06, T07, T09 | 拒绝、审批和扫描证据 | pending |
+| R09 | UI/Runtime 分离 | AC03, AC07, AC08, AC10, AC11 | T01-T11 | 协议测试和进程边界 | in-progress |
+| R10 | 两版本：Electron 学习版、Rust/Tauri 深入版 | AC01, AC10, AC11 | T00, T08, T10, T11 | 两版本验收报告 | confirmed |
+| R11 | 亲手单线学习 | AC01-AC09 | T01-T09 | 每个 Slice 的学习记录 | confirmed |
+| R12 | 先替换 Rust Runtime，再替换 Tauri 壳 | AC10, AC11 | T10, T11 | 分阶段迁移记录 | confirmed |
+| R13 | 共享协议、Fixture、验收和 UI 业务组件 | AC10, AC11 | T01, T02, T10, T11 | 契约测试与复用清单 | confirmed |
 
 ---
 
@@ -1003,7 +1119,7 @@ Tauri 版主要替换：
 应该保留：
 
 - Rust Runtime。
-- JSON-RPC-like 协议。
+- Codex 风格 JSON-RPC 2.0 协议。
 - Tool 和安全策略。
 - Model Adapter。
 - 大部分 React 页面和状态展示逻辑。
@@ -1048,7 +1164,7 @@ Tauri 版主要替换：
 借鉴 Codex 的：
 
 - UI 与 App Server 分离。
-- JSON-RPC-like 双向通信。
+- Codex 风格 JSON-RPC 2.0 双向通信。
 - Thread、Turn、Item 思路。
 - 流式事件。
 - 服务端发起审批请求。
@@ -1079,9 +1195,9 @@ Tauri 版主要替换：
 
 ---
 
-## 23. 当前需要用户确认的架构决策
+## 23. 已确认的架构决策
 
-在开始写代码前，只需要确认下面四点：
+下面的决策已经足够支撑协议和 Fake Runtime 开发，不再阻塞开始写代码：
 
 ### D01：第一版桌面壳
 
@@ -1107,8 +1223,9 @@ Tauri 版主要替换：
 ### D04：第一版模型入口
 
 ```text
-推荐：选择你当前确实能调用的一个 OpenAI-compatible Provider
+状态：延后到 T05 再选择当前确实能调用的 OpenAI-compatible Provider
 要求：base URL、model、key 不写死在代码中
+当前：T01-T04 使用 Fake Model，不需要 Key
 ```
 
 ### D05：版本迁移顺序
@@ -1119,7 +1236,7 @@ Electron + TypeScript
 → Tauri + Rust
 ```
 
-确认后才进入 T00/T01，不在本方案阶段提前创建项目或安装依赖。
+`T00` 已完成，项目已经进入 `T01`。D04 尚未确定不会阻塞协议、App Server 和 Fake Runtime 学习。
 
 ---
 
@@ -1145,15 +1262,44 @@ Rust Runtime 等价替换 AC10 和 Tauri 替壳 AC11 属于版本 B，不阻塞�
 
 ## 25. 下一步
 
-用户验收并确认本方案中的 D01-D04 后，进入第一个实现切片：
+现在只做 `T01-1`，不要同时写 App Server、模型、Tool 或 Electron。
 
 ```text
-T00：建立最小项目骨架
-   ↓
-T01：在终端跑通一个真实模型流式响应
+src/protocol/json-rpc.ts
+├─ JsonRpcId
+├─ JsonRpcRequest
+├─ JsonRpcNotification
+├─ JsonRpcSuccessResponse
+├─ JsonRpcErrorObject
+├─ JsonRpcErrorResponse
+└─ JsonRpcMessage 联合类型
 ```
 
-第一步不会直接画完整 Chat 页面，也不会直接加入 Skills、多 Agent 或复杂 Sandbox。
+这一小步必须理解四件事：
+
+1. Request 有 `id`，表示发送方等待 Response。
+2. Notification 没有 `id`，表示单向事件，不等待响应。
+3. Success Response 与 Error Response 都用相同 `id` 对应原 Request。
+4. App Server 也能发送 Request 给客户端，例如请求审批，所以不能把 Request 固定理解为“客户端发给服务端”。
+
+类型层验收：
+
+| 用例 | 输入形状 | 应判定为 |
+|---|---|---|
+| A | `{id: 1, method: "initialize", params: {}}` | Request |
+| B | `{method: "initialized", params: {}}` | Notification |
+| C | `{id: 1, result: {}}` | Success Response |
+| D | `{id: 1, error: {code: -32600, message: "Invalid Request"}}` | Error Response |
+
+当前刻意不写：
+
+- `stdin/stdout` 读写；那属于 `T02`。
+- Pending Request `Map`；那属于 `T02`。
+- Thread / Turn / Item；那属于 `T03`。
+- Agent Loop、模型和 Tool；那属于 `T04` 以后。
+- `jsonrpc: "2.0"` 字段；本项目当前对齐 Codex 的线上 Envelope，刻意省略。
+
+完成 `T01-1` 后，下一步是给四种消息补类型守卫和单元测试，而不是直接接模型。
 
 ---
 
@@ -1274,7 +1420,8 @@ LangSmith：不是必需依赖，后期研究 Trace 和评测时再判断
 ## 27. 参考资料
 
 - [OpenAI Codex 开源仓库](https://github.com/openai/codex)
-- [Codex App Server 协议](https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md)
+- [Codex App Server 官方文档](https://learn.chatgpt.com/docs/app-server)
+- [Codex App Server 开源实现](https://github.com/openai/codex/tree/main/codex-rs/app-server)
 - [Electron 官方文档](https://www.electronjs.org/docs/latest/)
 - [Electron 安全建议](https://www.electronjs.org/docs/latest/tutorial/security)
 - [Tauri 官方文档](https://tauri.app/)
