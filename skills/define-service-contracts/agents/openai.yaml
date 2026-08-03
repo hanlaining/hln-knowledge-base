@@ -1,0 +1,4 @@
+interface:
+  display_name: "前后端服务合同"
+  short_description: "在原型确认后冻结接口、数据模型、错误结构和权限合同"
+  default_prompt: "Use $define-service-contracts to freeze the frontend-backend contracts for this approved product prototype."

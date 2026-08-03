@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品体验设计"
+  short_description: "从用户价值和核心任务出发，设计好用、清爽、完整且可验收的产品体验"
+  default_prompt: "Use $design-product-experience to design a useful, intuitive, clean, and fully testable product experience from my confirmed user needs."
