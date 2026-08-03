@@ -18,6 +18,14 @@
 6. `implement-product-frontend`、`bootstrap-backend-foundation` 和 `implement-backend-slices` 在隔离 worker 中按批准范围实现。
 7. `integrate-and-verify-product` 汇总真实运行、视觉、交互、接口、安全和端到端证据。
 
+## 双 Chat 边界
+
+- 孵化任务保持 `DISCUSS`，只讨论做什么项目、为谁解决什么问题和 MVP 边界。
+- 用户明确说“现在去把这个项目落地”或要求新开 Chat 时，进入 `HANDOFF`，生成不含敏感信息的 Project Launch Brief。
+- 使用新建任务能力创建干净的执行任务，不 fork 全部聊天历史；当前孵化任务不得偷偷开始实现。
+- 执行任务显式使用 `deliver-product-end-to-end` 的 `EXECUTE` 模式，不重复询问已确认事实，并继续遵守全部审批门。
+- 同一项目只保留一个主执行任务；再次落地时优先继续原执行任务。
+
 ## 强制审批门
 
 - 产品问题、目标用户和成功标准不明确时，必须主动向用户提问。

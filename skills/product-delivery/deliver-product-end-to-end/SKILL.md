@@ -1,6 +1,6 @@
 ---
 name: deliver-product-end-to-end
-description: "Orchestrate a complete product delivery from a vague idea through active discovery, product requirements, clean minimal branding and Figma prototype, user approval, technical planning, frontend and backend contracts, resource-aware multi-CLI implementation, integration, testing, and evidence-backed user acceptance. Use when the user asks to build a new product or substantial feature end to end, says the prompt is incomplete, wants design-to-full-stack automation, wants one Codex supervisor coordinating Claude CLI workers, or needs corrections propagated across requirements, design, code, and acceptance."
+description: "Orchestrate a complete product delivery from a vague idea through active discovery, product requirements, clean minimal branding and Figma prototype, user approval, technical planning, frontend and backend contracts, resource-aware multi-CLI implementation, integration, testing, and evidence-backed user acceptance. Use when the user asks to build a new product or substantial feature end to end, wants to chat casually until choosing a project and then launch it in a fresh Codex task, says the prompt is incomplete, wants design-to-full-stack automation, wants one Codex supervisor coordinating Claude CLI workers, or needs corrections propagated across requirements, design, code, and acceptance."
 ---
 
 # 端到端产品交付总控
@@ -30,11 +30,34 @@ description: "Orchestrate a complete product delivery from a vague idea through 
 
 - `DISCUSS`：讨论产品方向，不写文件、不调用外部写入工具。
 - `PLAN`：形成 Rxx、ACxx、产品结构、Graph 和闸门，不实现。
+- `HANDOFF`：冻结已确认的项目事实，把精简交接包传给新 Codex 任务；当前任务不执行产品。
 - `EXECUTE`：用户明确要求开始实现后，按状态机推进。
 - `CORRECT`：用户纠偏时更新所有受影响的需求、验收、设计、Graph 和实现节点。
 - `RESUME`：读取项目状态与 Evidence，恢复未完成节点，不从头重做。
 
-用户说“开始实现”“按方案落地”“把整个产品做出来”时进入 `EXECUTE`。授权只覆盖当前阶段和明确范围，不自动包含 Git、外部账号、付费、生产或发布动作。
+用户要求在当前任务直接实现时进入 `EXECUTE`。用户说“现在去把这个项目落地”“新开一个 Chat 开始执行”或同义表达时进入 `HANDOFF`，不得在当前讨论任务偷偷执行。授权只覆盖创建执行任务和当前阶段的明确范围，不自动包含 Git、外部账号、付费、生产或发布动作。
+
+## 双 Chat 启动协议
+
+把产品孵化和项目执行分成两个任务：
+
+```text
+孵化任务（DISCUSS）
+→ 用户明确要求新开任务落地
+→ 结构化交接（HANDOFF）
+→ 执行任务（EXECUTE）
+```
+
+进入 `HANDOFF` 时读取 [discovery-to-execution-handoff.md](references/discovery-to-execution-handoff.md)，并严格执行：
+
+1. 只打包用户已确认事实、明确标记的推断、原始约束、Rxx/ACxx、MVP、排除项、体验方向、审批状态和待决问题；不要复制整段聊天、Cookie、Token、账号或无关历史。
+2. 已确认执行目标时直接使用；绿地项目使用独立 projectless 任务和安全目录名，已有仓库先列出 Codex 项目并确认目标。缺少会造成写错目录的执行目标时只补问这一个阻塞问题。
+3. 使用 Codex App 的新建任务能力创建全新执行任务，不 fork 孵化任务。新任务 Prompt 必须显式调用 `$deliver-product-end-to-end`、进入 `EXECUTE`、嵌入完整交接包并要求不重复询问已确认内容。
+4. 新任务从交接包证据支持的最远审批状态继续；没有明确用户确认时不得自行提升状态。执行任务仍必须遵守 Figma、技术方案、Git、外部账号、付费、生产和发布审批门。
+5. 创建成功后在孵化任务返回新任务入口、交接摘要和未授权边界；只有用户明确要求打开时才导航到新任务。孵化任务继续保持 `DISCUSS`。
+6. 创建失败或能力不可用时输出可复制的执行 Prompt 和完整交接包并停止；不得退回当前孵化任务继续实现。
+
+一个项目只能有一个主执行任务。再次收到落地指令时，优先找到并继续已有执行任务；只有用户明确要求重开时才创建第二个。
 
 ## 首次启动
 
