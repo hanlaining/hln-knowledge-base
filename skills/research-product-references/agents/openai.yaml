@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品参考调研"
+  short_description: "调研竞品与优质开源项目，输出可追溯、可复用的产品参考结论"
+  default_prompt: "Use $research-product-references to research relevant products and open-source references for this idea."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "后端底座交付"
+  short_description: "由唯一隔离 Worker 实现并验证可运行、可扩展的后端工程底座"
+  default_prompt: "Use $bootstrap-backend-foundation to define and deliver the approved backend foundation through one isolated worker."

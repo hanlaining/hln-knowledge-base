@@ -1,0 +1,4 @@
+interface:
+  display_name: "后端业务切片实现"
+  short_description: "基于冻结合同与已验收底座实现可独立验证的后端业务切片"
+  default_prompt: "Use $implement-backend-slices to implement the ready backend Graph issues on the approved foundation."

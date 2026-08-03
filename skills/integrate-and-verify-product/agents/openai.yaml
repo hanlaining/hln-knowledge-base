@@ -1,0 +1,4 @@
+interface:
+  display_name: "全栈集成与验收"
+  short_description: "联调真实前后端，并用验收用例、自动化测试和证据关闭产品"
+  default_prompt: "Use $integrate-and-verify-product to integrate the real frontend and backend and run the confirmed acceptance suite."

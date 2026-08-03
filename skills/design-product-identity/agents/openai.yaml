@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品品牌与 Logo"
+  short_description: "设计紧贴产品主题的简洁 Logo、图标和最小品牌视觉系统"
+  default_prompt: "Use $design-product-identity to create a clean, theme-aligned logo and minimum brand system for this product."
