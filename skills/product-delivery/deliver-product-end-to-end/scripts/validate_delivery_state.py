@@ -35,6 +35,22 @@ ISSUE_STATES = {
     "failed",
     "deferred",
 }
+APPROVAL_POLICIES = {"INTERACTIVE", "DELEGATED_SUPERVISOR"}
+MANIFEST_V2_FIELDS = {
+    "schemaVersion",
+    "product",
+    "stage",
+    "approvedStages",
+    "stageApprovals",
+    "approvalPolicy",
+    "delegatedScope",
+    "reservedUserActions",
+    "contractVersion",
+    "updatedAt",
+    "nextAction",
+    "blockedBy",
+}
+APPROVAL_RECORD_FIELDS = {"approved_by", "reviewed_artifacts", "evidence", "decision_reason"}
 REQUIREMENT_RE = re.compile(
     r"^##\s+(R\d{2,})\s+\[(confirmed|inferred|unknown|conflict)\]\s+(.+)$",
     re.MULTILINE,
@@ -183,6 +199,58 @@ def validate_graph(graph: Any, requirements: dict[str, str], acceptance: dict[st
     return len(graph["issues"])
 
 
+def validate_manifest(manifest: dict[str, Any], errors: list[str], warnings: list[str]) -> None:
+    schema_version = manifest.get("schemaVersion")
+    if schema_version not in {1, 2}:
+        errors.append(f"Unsupported manifest schemaVersion: {schema_version}")
+
+    if manifest.get("stage") not in STAGES:
+        errors.append(f"Invalid manifest stage: {manifest.get('stage')}")
+    approved = manifest.get("approvedStages")
+    if not isinstance(approved, list) or any(item not in STAGES for item in approved):
+        errors.append("manifest approvedStages must be a list of valid stages")
+        approved = []
+
+    if schema_version == 1:
+        warnings.append("Legacy manifest schemaVersion 1 has no delegated-approval provenance")
+        return
+
+    missing = sorted(MANIFEST_V2_FIELDS - set(manifest))
+    if missing:
+        errors.append(f"manifest missing fields: {', '.join(missing)}")
+    if manifest.get("approvalPolicy") not in APPROVAL_POLICIES:
+        errors.append(f"Invalid approvalPolicy: {manifest.get('approvalPolicy')}")
+    for field in ("delegatedScope", "reservedUserActions"):
+        if not isinstance(manifest.get(field), list):
+            errors.append(f"manifest {field} must be a list")
+
+    stage_approvals = manifest.get("stageApprovals")
+    if not isinstance(stage_approvals, dict):
+        errors.append("manifest stageApprovals must be an object")
+        return
+    for stage in approved:
+        record = stage_approvals.get(stage)
+        if not isinstance(record, dict):
+            errors.append(f"Approved stage {stage} has no stageApprovals record")
+            continue
+        record_missing = sorted(APPROVAL_RECORD_FIELDS - set(record))
+        if record_missing:
+            errors.append(f"Approval record {stage} missing fields: {', '.join(record_missing)}")
+        if not isinstance(record.get("approved_by"), str) or not record.get("approved_by", "").strip():
+            errors.append(f"Approval record {stage} approved_by must be a non-empty string")
+        for field in ("reviewed_artifacts", "evidence"):
+            if not isinstance(record.get(field), list):
+                errors.append(f"Approval record {stage} {field} must be a list")
+        if not isinstance(record.get("decision_reason"), str) or not record.get("decision_reason", "").strip():
+            errors.append(f"Approval record {stage} decision_reason must be a non-empty string")
+        approver = str(record.get("approved_by", "")).strip().casefold()
+        if stage == "USER_ACCEPTED" and not (approver.startswith("user") or approver.startswith("用户")):
+            errors.append("USER_ACCEPTED must be approved by the user")
+    unlisted = sorted(set(stage_approvals) - set(approved))
+    if unlisted:
+        errors.append(f"stageApprovals contains unlisted stages: {', '.join(unlisted)}")
+
+
 def main() -> int:
     args = parse_args()
     root = Path(args.root).expanduser().resolve()
@@ -197,11 +265,7 @@ def main() -> int:
     manifest = load_json(state_root / "manifest.json", errors)
     graph = load_json(state_root / "graph.json", errors)
     if isinstance(manifest, dict):
-        if manifest.get("stage") not in STAGES:
-            errors.append(f"Invalid manifest stage: {manifest.get('stage')}")
-        approved = manifest.get("approvedStages")
-        if not isinstance(approved, list) or any(item not in STAGES for item in approved):
-            errors.append("manifest approvedStages must be a list of valid stages")
+        validate_manifest(manifest, errors, warnings)
     elif manifest is not None:
         errors.append("manifest.json must contain an object")
 

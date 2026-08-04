@@ -10,7 +10,7 @@
 - 项目名称或安全目录名已经明确。
 - 目标是绿地 projectless 任务，或已经确认一个 Codex 项目。
 - 已确认事实与推断已经分开。
-- 当前审批状态有用户证据；没有证据时保持较早状态。
+- 当前审批状态有用户或委托监工的有效证据；没有证据时保持较早状态。
 - 交接内容不含密码、Cookie、Token、二维码、个人敏感信息或无关仓库内容。
 - 当前项目没有仍在运行的主执行任务；有则优先继续原任务。
 
@@ -24,6 +24,9 @@
 - launch_request: <用户要求新开任务落地的原话>
 - execution_target: <projectless:directory-name 或 project:project-id>
 - approved_stage: <有证据的最远状态；默认 DISCOVERY>
+- approval_policy: <INTERACTIVE 或 DELEGATED_SUPERVISOR>
+- delegated_scope: <允许独立监工批准的阶段；未委托填 none>
+- reserved_user_actions: <仍需用户亲自批准的动作>
 
 ## Product
 - name: <项目名>
@@ -64,14 +67,14 @@
 - Q01: <尚未确认且会影响后续审批的问题>
 ```
 
-没有 Rxx 或 ACxx 编号时，执行任务使用 `requirement-acceptance-planner` 根据确认内容生成并请求用户确认；不要编造确认状态。
+没有 Rxx 或 ACxx 编号时，执行任务使用 `requirement-acceptance-planner` 根据确认内容生成。`INTERACTIVE` 请求用户确认；`DELEGATED_SUPERVISOR` 由独立产品 Reviewer 审核并记录 Evidence。不要编造确认状态。
 
 ## 新任务 Prompt 合同
 
 ```text
 使用 $deliver-product-end-to-end，以 EXECUTE 模式接手下面的 Project Launch Brief。
 
-这是从产品孵化任务创建的全新执行任务。把 confirmed 内容当作用户已确认事实，不要重复询问；把 inferred 保持为待确认假设。先验证交接合同，再从 approved_stage 有证据支持的状态继续。严格遵守 Figma、技术方案、服务合同、Git、外部账号、付费、生产和发布审批门。
+这是从产品孵化任务创建的全新执行任务。把 confirmed 内容当作用户已确认事实，不要重复询问；把 inferred 保持为待确认假设。读取 approval_policy；若为 DELEGATED_SUPERVISOR，加载委托审批合同，让独立 Reviewer 审核可逆中间门禁并自动返工，不要逐阶段请求用户批准。先验证交接合同，再从 approved_stage 有证据支持的状态继续。严格保留 OAuth、付费、生产数据、不可逆动作、未预授权 Git、merge、发布、部署和最终 USER_ACCEPTED 的用户审批。
 
 <完整 Project Launch Brief>
 

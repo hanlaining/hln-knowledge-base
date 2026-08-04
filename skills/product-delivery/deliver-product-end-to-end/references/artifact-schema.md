@@ -16,9 +16,9 @@ Canonical 状态位于项目根目录 `.product-delivery/`：
 
 ## manifest.json
 
-必需字段：`schemaVersion`、`product`、`stage`、`approvedStages`、`contractVersion`、`updatedAt`、`nextAction`、`blockedBy`。
+必需字段：`schemaVersion`、`product`、`stage`、`approvedStages`、`stageApprovals`、`contractVersion`、`updatedAt`、`nextAction`、`blockedBy`、`approvalPolicy`、`delegatedScope`、`reservedUserActions`。
 
-`approvedStages` 只记录用户或真实 Evidence 已批准的阶段；不能因为文件存在自动追加。
+`approvedStages` 只列出按当前审批策略批准且有真实 Evidence 的阶段，不能因为文件存在自动追加。每个已批准阶段必须在 `stageApprovals` 中保存 `approved_by`、`reviewed_artifacts`、`evidence` 和 `decision_reason`；`USER_ACCEPTED` 只能记录用户批准。
 
 ## graph.json
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "端到端产品交付"
-  short_description: "先孵化产品方向，再在新任务中完成设计、全栈实现与真实验收"
-  default_prompt: "Use $deliver-product-end-to-end to discuss and confirm a product idea, then create a fresh Codex task to execute the approved end-to-end delivery."
+  short_description: "需求聊清后由独立监工审核返工，最终一次性交付完整产品"
+  default_prompt: "Use $deliver-product-end-to-end to discuss my requirements, then launch a fresh execution task with DELEGATED_SUPERVISOR so independent reviewers handle intermediate approvals and I review the final result."
