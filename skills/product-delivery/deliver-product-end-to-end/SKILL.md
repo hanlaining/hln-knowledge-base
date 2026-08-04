@@ -1,6 +1,6 @@
 ---
 name: deliver-product-end-to-end
-description: "Orchestrate a complete product delivery from a vague idea through active discovery, product requirements, clean minimal branding and Figma prototype, user approval, technical planning, frontend and backend contracts, resource-aware multi-CLI implementation, integration, testing, and evidence-backed user acceptance. Use when the user asks to build a new product or substantial feature end to end, wants to chat casually until choosing a project and then launch it in a fresh Codex task, says the prompt is incomplete, wants design-to-full-stack automation, wants one Codex supervisor coordinating Claude CLI workers, or needs corrections propagated across requirements, design, code, and acceptance."
+description: "Orchestrate a complete product delivery from a vague idea through active discovery, product requirements, clean minimal branding and Figma prototype, approval, technical planning, frontend and backend contracts, resource-aware multi-CLI implementation, integration, testing, and evidence-backed user acceptance. Use when the user asks to build a new product or substantial feature end to end, wants to chat casually until choosing a project and then launch it in a fresh Codex task, wants independent supervisors to approve and automatically return intermediate work while the user only provides requirements and reviews the final result, says the prompt is incomplete, wants design-to-full-stack automation, wants one Codex supervisor coordinating Claude CLI workers, or needs corrections propagated across requirements, design, code, and acceptance."
 ---
 
 # 端到端产品交付总控
@@ -11,8 +11,8 @@ description: "Orchestrate a complete product delivery from a vague idea through 
 
 只把两类产物视为产品真相：
 
-1. 用户需求 `Rxx`。
-2. 用户确认的验收用例 `ACxx`。
+1. 用户原始或澄清确认的需求 `Rxx`。
+2. 可追溯到 Rxx、可观察且经当前审批策略确认的验收用例 `ACxx`。
 
 架构、Figma、任务、代码、分支和测试都是中间产物。只有集成后的真实产品通过确认的 `ACxx`，且用户接受最终体验，才能说产品完成。
 
@@ -37,6 +37,17 @@ description: "Orchestrate a complete product delivery from a vague idea through 
 
 用户要求在当前任务直接实现时进入 `EXECUTE`。用户说“现在去把这个项目落地”“新开一个 Chat 开始执行”或同义表达时进入 `HANDOFF`，不得在当前讨论任务偷偷执行。授权只覆盖创建执行任务和当前阶段的明确范围，不自动包含 Git、外部账号、付费、生产或发布动作。
 
+## 选择审批策略
+
+运行模式与审批策略相互独立：
+
+- `INTERACTIVE`：关键中间阶段由用户逐项确认。
+- `DELEGATED_SUPERVISOR`：用户明确委托后，由独立 Reviewer 审核可逆中间阶段，主 Codex 根据 Evidence 自动推进；用户只处理保留动作、高影响阻塞和最终验收。
+
+用户说“采用监工委托审批”“中间不用问我”“需求聊完直接做，我只看结果”或同义表达时，读取 [delegated-supervisor-approval.md](references/delegated-supervisor-approval.md)，并把审批策略、委托范围和用户保留动作写入项目状态与 Project Launch Brief。没有明确授权时默认 `INTERACTIVE`，不得自行启用委托。
+
+`DELEGATED_SUPERVISOR` 不表示取消门禁。每个阶段必须由非写入 Owner 的独立 Reviewer 检查 Rxx/ACxx、完整产物和真实 Evidence；P0–P2 自动回原 Worker 返工直至清零。所有通过记录 `approved_by`、`reviewed_artifacts`、`evidence` 和 `decision_reason`。
+
 ## 双 Chat 启动协议
 
 把产品孵化和项目执行分成两个任务：
@@ -52,7 +63,7 @@ description: "Orchestrate a complete product delivery from a vague idea through 
 
 1. 只打包用户已确认事实、明确标记的推断、原始约束、Rxx/ACxx、MVP、排除项、体验方向、审批状态和待决问题；不要复制整段聊天、Cookie、Token、账号或无关历史。
 2. 已确认执行目标时直接使用；绿地项目使用独立 projectless 任务和安全目录名，已有仓库先列出 Codex 项目并确认目标。缺少会造成写错目录的执行目标时只补问这一个阻塞问题。
-3. 使用 Codex App 的新建任务能力创建全新执行任务，不 fork 孵化任务。新任务 Prompt 必须显式调用 `$deliver-product-end-to-end`、进入 `EXECUTE`、嵌入完整交接包并要求不重复询问已确认内容。
+3. 使用 Codex App 的新建任务能力创建全新执行任务，不 fork 孵化任务。新任务 Prompt 必须显式调用 `$deliver-product-end-to-end`、进入 `EXECUTE`、携带审批策略、嵌入完整交接包并要求不重复询问已确认内容。
 4. 新任务从交接包证据支持的最远审批状态继续；没有明确用户确认时不得自行提升状态。执行任务仍必须遵守 Figma、技术方案、Git、外部账号、付费、生产和发布审批门。
 5. 创建成功后在孵化任务返回新任务入口、交接摘要和未授权边界；只有用户明确要求打开时才导航到新任务。孵化任务继续保持 `DISCUSS`。
 6. 创建失败或能力不可用时输出可复制的执行 Prompt 和完整交接包并停止；不得退回当前孵化任务继续实现。
@@ -99,7 +110,7 @@ DISCOVERY
 - `FIGMA_PROTOTYPE_APPROVED` 前不确定真实项目技术栈、不写业务代码。
 - `CONTRACT_APPROVED` 前前后端不能分别猜接口。
 - `INTEGRATION_PASSED` 前不能声称全栈完成。
-- 用户未明确确认时不得进入下一项不可逆或外部写入阶段。
+- 用户或获明确委托的独立监工未按当前审批策略确认时不得推进；不可逆、外部写入和用户保留动作只能由用户授权。
 
 ## 技术选型规则
 
@@ -161,6 +172,8 @@ Spec → Epic → Issue → Agent Task → Evidence
 
 Worker 的完成标记只表示等待 Review。Issue 任务必须独立检查完整累计 diff、真实调用链、测试和 P0–P3；P0–P2 回到原 Worker 修复。
 
+委托审批时，把产品、体验、品牌、Figma、架构、合同、实现、集成和验收分别建立 Reviewer 节点。产出 Worker 与对应 Reviewer 不得是同一任务；主 Codex 只有在 Reviewer 问题清零并亲自核对 Evidence 后才能改变阶段状态。
+
 Akasha 的默认 commit、push 和 worktree 回收授权不适用于 hln/smy。所有 Git 动作继续逐项征求明确批准，不得把本 Skill 当成 Git 授权。
 
 ## 无固定上限的资源调度
@@ -179,20 +192,17 @@ Akasha 的默认 commit、push 和 worktree 回收授权不适用于 hln/smy。�
 
 ## 用户确认规则
 
-必须主动发起确认：
+`INTERACTIVE` 必须主动请求用户确认：产品定位与 MVP、体验与旅程、Logo 与第一版页面、Figma 主/异常流程、原型冻结、技术栈、数据/权限和服务合同。
 
-- 产品定位、用户价值、核心任务、体验目标、用户旅程和 MVP。
-- Logo 与第一版实际页面效果。
-- Figma 完整主流程和异常流程。
-- 原型冻结与进入技术方案。
-- 技术栈、数据、权限和服务合同。
-- 外部账号写入、付费、Git、生产和不可逆动作。
+`DELEGATED_SUPERVISOR` 不把上述可逆中间阶段发给用户审批；按委托审批合同独立审核、自动返工并记录证据。只有以下情况打断用户：
 
-不必打断用户：
+- Figma 或第三方账号的 OAuth、扫码和文件/团队权限。
+- 付费、生产环境、真实用户数据、删除覆盖和其他不可逆动作。
+- 未在启动时明确预授权的 Git、PR、merge、发布和部署。
+- 两个方向都合理但会改变产品根本价值、隐私、安全或商业边界的歧义。
+- 最终 `USER_ACCEPTED`。
 
-- 可逆的间距、基础状态、常见布局和轻量动效。
-- 能从已有项目事实直接查明的实现细节。
-- 不改变 Rxx、ACxx、安全和产品边界的低风险建议。
+不改变 Rxx、ACxx、安全和产品边界的可逆细节由当前审批策略处理。用户若已对固定项目范围一次性授权 branch、worktree、commit、push 和 PR，应记录授权并减少重复询问；merge、生产和发布未被明确包含时仍需单独批准。
 
 ## 纠偏与恢复
 
@@ -212,7 +222,7 @@ Akasha 的默认 commit、push 和 worktree 回收授权不适用于 hln/smy。�
 读取 [evidence-contract.md](references/evidence-contract.md)。至少要求：
 
 - 核心任务的真实完成观察，包括入口发现、步骤/时间、关键犹豫点、失败恢复和结果理解；指标必须来自真实测试，不伪造数据。
-- Figma 节点、页面截图、交互原型链接和用户确认。
+- Figma 节点、页面截图、交互原型链接，以及按当前审批策略记录的批准主体和证据。
 - 前端真实浏览器截图与 Figma 同 viewport 差异证据。
 - 真实前后端请求、成功/失败路径和集成测试。
 - 自动化命令、退出码、测试 totals 与时间。

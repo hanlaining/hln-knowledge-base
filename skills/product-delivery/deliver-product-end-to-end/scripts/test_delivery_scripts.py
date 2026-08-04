@@ -32,6 +32,9 @@ class DeliveryScriptsTest(unittest.TestCase):
             self.assertTrue(json.loads(first.stdout)["ok"])
             second = self.run_script("init_delivery_workspace.py", "--root", str(root))
             self.assertTrue(json.loads(second.stdout)["skippedExisting"])
+            manifest = json.loads((root / ".product-delivery" / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["schemaVersion"], 2)
+            self.assertEqual(manifest["approvalPolicy"], "INTERACTIVE")
             validated = self.run_script("validate_delivery_state.py", "--root", str(root))
             payload = json.loads(validated.stdout)
             self.assertTrue(payload["ok"])
@@ -46,6 +49,70 @@ class DeliveryScriptsTest(unittest.TestCase):
             requirements.write_text("# 产品需求\n\n## R01 [confirmed] 必须可见\n", encoding="utf-8")
             result = self.run_script("validate_delivery_state.py", "--root", str(root), expected=1)
             self.assertIn("Confirmed requirement R01 is not mapped", result.stdout)
+
+    def test_delegated_approval_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "project"
+            root.mkdir()
+            self.run_script("init_delivery_workspace.py", "--root", str(root))
+            state_root = root / ".product-delivery"
+            (state_root / "requirements.md").write_text(
+                "# 产品需求\n\n## R01 [confirmed] 提醒快过期食材\n",
+                encoding="utf-8",
+            )
+            (state_root / "acceptance.md").write_text(
+                "# 验收\n\n## AC01 快过期提醒可见\n\n- Related requirements: R01\n- Status: draft\n",
+                encoding="utf-8",
+            )
+            manifest_path = state_root / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest.update(
+                {
+                    "stage": "PRODUCT_CONFIRMED",
+                    "approvedStages": ["PRODUCT_CONFIRMED"],
+                    "approvalPolicy": "DELEGATED_SUPERVISOR",
+                    "delegatedScope": ["PRODUCT_CONFIRMED"],
+                    "reservedUserActions": ["USER_ACCEPTED"],
+                    "stageApprovals": {
+                        "PRODUCT_CONFIRMED": {
+                            "approved_by": "reviewer:product-01",
+                            "reviewed_artifacts": ["requirements.md", "acceptance.md"],
+                            "evidence": ["evidence/index.md"],
+                            "decision_reason": "R01 and AC01 are traceable and the MVP boundary is explicit.",
+                        }
+                    },
+                }
+            )
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            payload = json.loads(
+                self.run_script("validate_delivery_state.py", "--root", str(root)).stdout
+            )
+            self.assertTrue(payload["ok"])
+
+            manifest["stageApprovals"] = {}
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            failed = self.run_script("validate_delivery_state.py", "--root", str(root), expected=1)
+            self.assertIn("has no stageApprovals record", failed.stdout)
+
+    def test_legacy_manifest_remains_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "project"
+            root.mkdir()
+            self.run_script("init_delivery_workspace.py", "--root", str(root))
+            manifest_path = root / ".product-delivery" / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["schemaVersion"] = 1
+            for field in ("stageApprovals", "approvalPolicy", "delegatedScope", "reservedUserActions"):
+                manifest.pop(field)
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            payload = json.loads(
+                self.run_script("validate_delivery_state.py", "--root", str(root)).stdout
+            )
+            self.assertTrue(payload["ok"])
+            self.assertIn(
+                "Legacy manifest schemaVersion 1 has no delegated-approval provenance",
+                payload["warnings"],
+            )
 
     def test_green_and_red_concurrency(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

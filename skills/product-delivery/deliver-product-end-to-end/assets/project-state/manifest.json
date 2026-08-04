@@ -1,8 +1,12 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "",
   "stage": "DISCOVERY",
   "approvedStages": [],
+  "stageApprovals": {},
+  "approvalPolicy": "INTERACTIVE",
+  "delegatedScope": [],
+  "reservedUserActions": [],
   "contractVersion": null,
   "updatedAt": null,
   "nextAction": "Clarify the product and confirm Rxx/ACxx.",
