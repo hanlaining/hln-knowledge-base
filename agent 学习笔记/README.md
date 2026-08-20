@@ -1,6 +1,6 @@
 # Agent 学习笔记
 
-本目录按学习阶段和源码专题分类，避免把客户端架构、Agent Runtime 与 LLM 模型原理混在一起。
+本目录按学习阶段、源码专题和自主 Runtime 研究分类，避免把桌面客户端、Agent Runtime、LLM 模型原理与远期系统愿景混在一起。
 
 ## 目录结构
 
@@ -14,8 +14,10 @@ agent 学习笔记/
 ├─ 03-Grok源码学习/
 │  ├─ Grok-Build-CLI-Agent架构深度解析.md
 │  └─ Grok-1开源项目源码架构深度解析.md
-└─ 04-从0手戳Agent/
-   └─ 01-MCP入门与JSONRPC安全机制.md
+├─ 04-从0手戳Agent/
+│  └─ 01-MCP入门与JSONRPC安全机制.md
+└─ 05-God-Agent与统一智能体体系/
+   └─ God-Agent中央大脑统一Agent-Runtime持续架构讨论.md
 ```
 
 ## 推荐阅读顺序
@@ -26,6 +28,7 @@ agent 学习笔记/
 4. [MCP 入门与 JSON-RPC 安全机制](./04-从0手戳Agent/01-MCP入门与JSONRPC安全机制.md)：理解 MCP、Tool、Skill、Runtime、JSON-RPC、Approval 与 Sandbox 的边界。
 5. [Grok Build Agent 架构](./03-Grok源码学习/Grok-Build-CLI-Agent架构深度解析.md)：研究完整 Coding Agent CLI、Runtime、ACP、Tool 与 Sandbox。
 6. [Grok-1 模型架构](./03-Grok源码学习/Grok-1开源项目源码架构深度解析.md)：补充 Transformer、GQA、KV Cache、MoE 与模型推理原理。
+7. [God-Agent 中央大脑统一 Agent Runtime](./05-God-Agent与统一智能体体系/God-Agent中央大脑统一Agent-Runtime持续架构讨论.md)：从耐久执行底座进入 Task Contract、Context Compiler、Completion Proof、双执行链路和统一智能体体系研究。
 
 ## 分类说明
 
@@ -33,3 +36,4 @@ agent 学习笔记/
 - `02-Codex源码学习`：记录 OpenAI Codex 的具体实现机制。
 - `03-Grok源码学习`：同时区分 Grok Build 的 Agent 系统和 Grok-1 的模型推理层。
 - `04-从0手戳Agent`：按 Codex-like 架构逐步实现 Protocol、App Server、Runtime、安全执行、Skills 与 MCP。
+- `05-God-Agent与统一智能体体系`：记录自主 Agent Runtime、中央控制闭环、可靠执行、完成证明和远期统一智能体体系的持续研究。

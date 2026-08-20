@@ -25,6 +25,14 @@ hln 的个人公开 AI 协作知识库，用于沉淀可复用的 Skills、SOP�
   - Skill Tree、正负触发边界、召回与重排。
   - 总体计划、任务 MD、最多三个 CLI 和真实产品验收。
 
+### Agent 学习与 Runtime 研究
+
+- [Agent 学习笔记索引](agent%20学习笔记/README.md)
+- [God-Agent 中央大脑统一 Agent Runtime：持续架构讨论](agent%20学习笔记/05-God-Agent与统一智能体体系/God-Agent中央大脑统一Agent-Runtime持续架构讨论.md)
+  - 区分产品愿景、工程 Runtime 与科研问题。
+  - 讨论双执行链路、权威状态、Task Contract、Context Compiler、Completion Proof 和故障恢复。
+  - 持续记录已收敛原则、证据边界、开放问题与讨论日志。
+
 ## 安装 Skill
 
 将完整 Skill 目录复制到 Codex Skills 目录：
